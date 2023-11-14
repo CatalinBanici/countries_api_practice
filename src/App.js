@@ -1,38 +1,58 @@
-import React, { useState } from "react";
-import { useGetAllCountriesQuery } from "./apiSlice";
+import React, { useEffect, useState } from "react";
+import {
+  useGetAllCountriesQuery,
+  useLazyGetCountriesByRegionQuery,
+} from "./apiSlice";
 
 function App() {
-  const { data: countries, error } = useGetAllCountriesQuery();
+  const [
+    trigger,
+    {
+      data: regionCountries,
+      isLoading: regionCountriesLoading,
+      error: regionCountriesError,
+      refetch: regionCountriesRefetch,
+    },
+  ] = useLazyGetCountriesByRegionQuery();
+
+  const {
+    data: allCountries,
+    isLoading: allCountriesLoading,
+    error: allCountriesError,
+  } = useGetAllCountriesQuery();
+
   const [sortBy, setSortBy] = useState(""); // Default sort by name
   const [filterByRegion, setFilterByRegion] = useState("");
   const [nameFilter, setNameFilter] = useState("");
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+  useEffect(() => {
+    if (filterByRegion) {
+      trigger(filterByRegion);
+    }
+  }, [filterByRegion]);
 
-  if (!countries) {
+  if (allCountriesLoading || regionCountriesLoading) {
     return <div>Loading...</div>;
   }
 
-  // Create a copy of the countries array to keep the original order when filtering
-  let filteredCountries = [...countries];
-
-  // Apply the region filter
-  if (filterByRegion) {
-    filteredCountries = filteredCountries.filter(
-      (country) => country.region === filterByRegion
-    );
+  if (allCountriesError || regionCountriesError) {
+    return <div>ERROR</div>;
   }
 
-  if (nameFilter) {
-    filteredCountries = filteredCountries.filter((country) =>
-      country.name.common.toLowerCase().includes(nameFilter.toLowerCase())
-    );
+  let displayCountries;
+
+  if (allCountries && !filterByRegion) {
+    displayCountries = [...allCountries];
+  } else if (regionCountries && filterByRegion) {
+    displayCountries = [...regionCountries];
+  } else {
+    return null;
   }
 
-  // Sort countries based on the selected sort option and order
-  filteredCountries.sort((a, b) => {
+  // console.log("regionCountries", regionCountries);
+  console.log("displayCountries", displayCountries);
+
+  displayCountries.sort((a, b) => {
     switch (sortBy) {
       case "pop+":
         return a.population - b.population;
@@ -46,11 +66,10 @@ function App() {
         return null;
     }
   });
-  console.log(countries);
-  console.log(filteredCountries);
+
   return (
     <div>
-      <div>{filteredCountries.length}</div>
+      <div>{displayCountries.length}</div>
       <label>
         Filter by Region:
         <select
@@ -90,7 +109,7 @@ function App() {
       </label>
 
       <ul>
-        {filteredCountries.map((country) => (
+        {displayCountries.map((country) => (
           <li key={country.cca2}>{country.name.common}</li>
         ))}
       </ul>
