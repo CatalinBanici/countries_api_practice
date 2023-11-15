@@ -2,18 +2,27 @@ import React, { useEffect, useState } from "react";
 import {
   useGetAllCountriesQuery,
   useLazyGetCountriesByRegionQuery,
+  useLazyGetCountriesBySubRegionQuery,
 } from "./apiSlice";
 
 function App() {
   const [
-    trigger,
+    triggerRegionCountries,
     {
       data: regionCountries,
       isLoading: regionCountriesLoading,
       error: regionCountriesError,
-      refetch: regionCountriesRefetch,
     },
   ] = useLazyGetCountriesByRegionQuery();
+
+  const [
+    triggerSubRegionCountries,
+    {
+      data: subRegionCountries,
+      isLoading: subRegionLoading,
+      error: subRegionError,
+    },
+  ] = useLazyGetCountriesBySubRegionQuery();
 
   const {
     data: allCountries,
@@ -23,13 +32,25 @@ function App() {
 
   const [sortBy, setSortBy] = useState(""); // Default sort by name
   const [filterByRegion, setFilterByRegion] = useState("");
+  const [filterBySubRegion, setFilterBySubregion] = useState("");
   const [nameFilter, setNameFilter] = useState("");
+  const [subRegionNames, setSubRegionsName] = useState("");
 
   useEffect(() => {
     if (filterByRegion) {
-      trigger(filterByRegion);
+      triggerRegionCountries(filterByRegion);
     }
+    console.log("filterByRegion effect");
   }, [filterByRegion]);
+
+  useEffect(() => {
+    if (filterBySubRegion) {
+      triggerSubRegionCountries(filterBySubRegion);
+      console.log("filterBySubRegion effect");
+    }
+  }, [filterBySubRegion]);
+
+  console.log("subRegionCountries", subRegionCountries);
 
   if (allCountriesLoading || regionCountriesLoading) {
     return <div>Loading...</div>;
@@ -49,8 +70,24 @@ function App() {
     return null;
   }
 
+  if (subRegionCountries && filterBySubRegion) {
+    displayCountries = [...subRegionCountries];
+  }
+
   // console.log("regionCountries", regionCountries);
-  console.log("displayCountries", displayCountries);
+  // console.log("displayCountries", displayCountries);
+
+  // const subRegions =
+  //   (regionCountries && regionCountries.map((e) => e.subregion)) ||
+  //   allCountries.map((e) => e.subregion);
+
+  const subRegions =
+    (filterByRegion && regionCountries.map((e) => e.subregion)) ||
+    allCountries.map((e) => e.subregion);
+
+  const subRegionsArr = [...new Set(subRegions)];
+
+  console.log(subRegionsArr);
 
   displayCountries.sort((a, b) => {
     switch (sortBy) {
@@ -73,7 +110,10 @@ function App() {
       <label>
         Filter by Region:
         <select
-          onChange={(e) => setFilterByRegion(e.target.value)}
+          onChange={(e) => {
+            setFilterByRegion(e.target.value);
+            setFilterBySubregion("");
+          }}
           value={filterByRegion}
         >
           <option value="">All</option>
@@ -83,6 +123,19 @@ function App() {
           <option value="Europe">Europe</option>
           <option value="Oceania">Oceania</option>
           {/* Add other region options if needed */}
+        </select>
+      </label>
+
+      <label>
+        Filter by subregion
+        <select
+          onChange={(e) => setFilterBySubregion(e.target.value)}
+          value={filterBySubRegion}
+        >
+          <option value="">All</option>
+          {subRegionsArr.map((e, i) => (
+            <option key={i}>{e}</option>
+          ))}
         </select>
       </label>
 
