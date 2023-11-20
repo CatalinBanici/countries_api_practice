@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   useGetAllCountriesQuery,
   useLazyGetCountriesByRegionQuery,
   useLazyGetCountriesBySubRegionQuery,
+  useLazySearchCountryByNameQuery,
 } from "./apiSlice";
 
 function App() {
@@ -24,17 +25,25 @@ function App() {
     },
   ] = useLazyGetCountriesBySubRegionQuery();
 
+  const [
+    triggerSearchByName,
+    {
+      data: searchByName,
+      isLoading: searchByNameLoading,
+      error: searchByNameError,
+    },
+  ] = useLazySearchCountryByNameQuery();
+
   const {
     data: allCountries,
     isLoading: allCountriesLoading,
     error: allCountriesError,
   } = useGetAllCountriesQuery();
 
-  const [sortBy, setSortBy] = useState(""); // Default sort by name
+  const [sortBy, setSortBy] = useState("");
   const [filterByRegion, setFilterByRegion] = useState("");
   const [filterBySubRegion, setFilterBySubregion] = useState("");
-  const [nameFilter, setNameFilter] = useState("");
-  const [subRegionNames, setSubRegionsName] = useState("");
+  const [filterSearchByName, setFilterSearchByName] = useState("");
 
   useEffect(() => {
     if (filterByRegion) {
@@ -49,8 +58,6 @@ function App() {
       console.log("filterBySubRegion effect");
     }
   }, [filterBySubRegion]);
-
-  console.log("subRegionCountries", subRegionCountries);
 
   if (allCountriesLoading || regionCountriesLoading) {
     return <div>Loading...</div>;
@@ -74,20 +81,15 @@ function App() {
     displayCountries = [...subRegionCountries];
   }
 
-  // console.log("regionCountries", regionCountries);
-  // console.log("displayCountries", displayCountries);
-
-  // const subRegions =
-  //   (regionCountries && regionCountries.map((e) => e.subregion)) ||
-  //   allCountries.map((e) => e.subregion);
+  if (filterSearchByName && searchByName) {
+    displayCountries = [...searchByName];
+  }
 
   const subRegions =
     (filterByRegion && regionCountries.map((e) => e.subregion)) ||
     allCountries.map((e) => e.subregion);
 
   const subRegionsArr = [...new Set(subRegions)];
-
-  console.log(subRegionsArr);
 
   displayCountries.sort((a, b) => {
     switch (sortBy) {
@@ -104,6 +106,8 @@ function App() {
     }
   });
 
+  console.log("filterSearchByName", filterSearchByName);
+
   return (
     <div>
       <div>{displayCountries.length}</div>
@@ -112,6 +116,7 @@ function App() {
         <select
           onChange={(e) => {
             setFilterByRegion(e.target.value);
+            setFilterSearchByName("");
             setFilterBySubregion("");
           }}
           value={filterByRegion}
@@ -122,14 +127,16 @@ function App() {
           <option value="Asia">Asia</option>
           <option value="Europe">Europe</option>
           <option value="Oceania">Oceania</option>
-          {/* Add other region options if needed */}
         </select>
       </label>
 
       <label>
         Filter by subregion
         <select
-          onChange={(e) => setFilterBySubregion(e.target.value)}
+          onChange={(e) => {
+            setFilterBySubregion(e.target.value);
+            setFilterSearchByName("");
+          }}
           value={filterBySubRegion}
         >
           <option value="">All</option>
@@ -142,7 +149,7 @@ function App() {
       <label>
         Sort by:
         <select onChange={(e) => setSortBy(e.target.value)} value={sortBy}>
-          <option defaultValue="none">None</option>
+          <option defaultValue="">None</option>
           <option value="name+">Name +</option>
           <option value="name-">Name -</option>
           <option value="pop+">Population +</option>
@@ -150,16 +157,27 @@ function App() {
           {/* Add other sorting options if needed */}
         </select>
       </label>
-
-      <label>
-        Search by Name:
-        <input
-          type="text"
-          placeholder="Search by name"
-          value={nameFilter}
-          onChange={(e) => setNameFilter(e.target.value)}
-        />
-      </label>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <label>
+          Search by Name:
+          <input
+            type="search"
+            placeholder="Search by name"
+            value={filterSearchByName}
+            onChange={(e) => setFilterSearchByName(e.target.value)}
+          />
+          <button
+            onClick={() => {
+              filterSearchByName && triggerSearchByName(filterSearchByName);
+              setFilterByRegion("");
+              setFilterBySubregion("");
+              setSortBy("");
+            }}
+          >
+            search
+          </button>
+        </label>
+      </form>
 
       <ul>
         {displayCountries.map((country) => (
