@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useGetAllCountriesQuery,
   useLazyGetCountriesByRegionQuery,
@@ -6,6 +6,12 @@ import {
 } from "./apiSlice";
 
 function App() {
+  const {
+    data: allCountries,
+    isLoading: allCountriesLoading,
+    error: allCountriesError,
+  } = useGetAllCountriesQuery();
+
   const [
     triggerRegionCountries,
     {
@@ -23,12 +29,6 @@ function App() {
       error: subRegionError,
     },
   ] = useLazyGetCountriesBySubRegionQuery();
-
-  const {
-    data: allCountries,
-    isLoading: allCountriesLoading,
-    error: allCountriesError,
-  } = useGetAllCountriesQuery();
 
   const [sortBy, setSortBy] = useState("");
   const [filterByRegion, setFilterByRegion] = useState("");
@@ -49,11 +49,11 @@ function App() {
     }
   }, [filterBySubRegion]);
 
-  if (allCountriesLoading || regionCountriesLoading) {
+  if (allCountriesLoading || regionCountriesLoading || subRegionLoading) {
     return <div>Loading...</div>;
   }
 
-  if (allCountriesError || regionCountriesError) {
+  if (allCountriesError || regionCountriesError || subRegionError) {
     return <div>ERROR</div>;
   }
 
@@ -71,11 +71,21 @@ function App() {
     displayCountries = [...subRegionCountries];
   }
 
+  if (filterSearchByName) {
+    displayCountries = displayCountries.filter((country) =>
+      country.name.common
+        .toLowerCase()
+        .includes(filterSearchByName.toLowerCase())
+    );
+  }
+
   const subRegions =
     (filterByRegion && regionCountries.map((e) => e.subregion)) ||
     allCountries.map((e) => e.subregion);
-
   const subRegionsArr = [...new Set(subRegions)];
+
+  const regions = allCountries.map((e) => e.region);
+  const regionsArr = [...new Set(regions)];
 
   displayCountries.sort((a, b) => {
     switch (sortBy) {
@@ -108,11 +118,9 @@ function App() {
           value={filterByRegion}
         >
           <option value="">All</option>
-          <option value="Africa">Africa</option>
-          <option value="Americas">Americas</option>
-          <option value="Asia">Asia</option>
-          <option value="Europe">Europe</option>
-          <option value="Oceania">Oceania</option>
+          {regionsArr.map((e, i) => (
+            <option key={i}>{e}</option>
+          ))}
         </select>
       </label>
 
@@ -140,7 +148,6 @@ function App() {
           <option value="name-">Name -</option>
           <option value="pop+">Population +</option>
           <option value="pop-">Population -</option>
-          {/* Add other sorting options if needed */}
         </select>
       </label>
 
