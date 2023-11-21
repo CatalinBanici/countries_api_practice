@@ -13,9 +13,6 @@ export const countriesApi = createApi({
     getCountriesBySubRegion: builder.query({
       query: (subRegionParams) => `subregion/${subRegionParams}`,
     }),
-    searchCountryByName: builder.query({
-      query: (searchParam) => `name/${searchParam}`,
-    }),
   }),
 });
 
@@ -23,5 +20,4 @@ export const {
   useGetAllCountriesQuery,
   useLazyGetCountriesByRegionQuery,
   useLazyGetCountriesBySubRegionQuery,
-  useLazySearchCountryByNameQuery,
 } = countriesApi;

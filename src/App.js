@@ -3,7 +3,6 @@ import {
   useGetAllCountriesQuery,
   useLazyGetCountriesByRegionQuery,
   useLazyGetCountriesBySubRegionQuery,
-  useLazySearchCountryByNameQuery,
 } from "./apiSlice";
 
 function App() {
@@ -24,15 +23,6 @@ function App() {
       error: subRegionError,
     },
   ] = useLazyGetCountriesBySubRegionQuery();
-
-  const [
-    triggerSearchByName,
-    {
-      data: searchByName,
-      isLoading: searchByNameLoading,
-      error: searchByNameError,
-    },
-  ] = useLazySearchCountryByNameQuery();
 
   const {
     data: allCountries,
@@ -81,10 +71,6 @@ function App() {
     displayCountries = [...subRegionCountries];
   }
 
-  if (filterSearchByName && searchByName) {
-    displayCountries = [...searchByName];
-  }
-
   const subRegions =
     (filterByRegion && regionCountries.map((e) => e.subregion)) ||
     allCountries.map((e) => e.subregion);
@@ -106,7 +92,7 @@ function App() {
     }
   });
 
-  console.log("filterSearchByName", filterSearchByName);
+  console.log("displayCountries", displayCountries);
 
   return (
     <div>
@@ -157,27 +143,16 @@ function App() {
           {/* Add other sorting options if needed */}
         </select>
       </label>
-      <form onSubmit={(e) => e.preventDefault()}>
-        <label>
-          Search by Name:
-          <input
-            type="search"
-            placeholder="Search by name"
-            value={filterSearchByName}
-            onChange={(e) => setFilterSearchByName(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              filterSearchByName && triggerSearchByName(filterSearchByName);
-              setFilterByRegion("");
-              setFilterBySubregion("");
-              setSortBy("");
-            }}
-          >
-            search
-          </button>
-        </label>
-      </form>
+
+      <label>
+        Search by Name:
+        <input
+          type="search"
+          placeholder="Search by name"
+          value={filterSearchByName}
+          onChange={(e) => setFilterSearchByName(e.target.value)}
+        />
+      </label>
 
       <ul>
         {displayCountries.map((country) => (
