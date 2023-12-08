@@ -160,7 +160,16 @@ export default function Home() {
         />
       </label>
 
-      {/* <button onClick={() => triggerCountryByName("Germany")}>trigger</button> */}
+      <button
+        onClick={() => {
+          setSortBy("");
+          setFilterByRegion("");
+          setFilterBySubregion("");
+          setFilterSearchByName("");
+        }}
+      >
+        clear
+      </button>
 
       <ul>
         {displayCountries.map((country) => (

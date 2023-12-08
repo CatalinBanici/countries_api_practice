@@ -16,6 +16,9 @@ export const countriesApi = createApi({
     getCountryByName: builder.query({
       query: (nameParams) => `name/${nameParams}?fullText=true`,
     }),
+    getCountriesByCodes: builder.query({
+      query: (codesParams) => `alpha?codes=${codesParams}`,
+    }),
   }),
 });
 
@@ -24,4 +27,5 @@ export const {
   useLazyGetCountriesByRegionQuery,
   useLazyGetCountriesBySubRegionQuery,
   useGetCountryByNameQuery,
+  useLazyGetCountriesByCodesQuery,
 } = countriesApi;
